@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณรายได้ต่อเดือนพนักงาน</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Kanit & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Kanit', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            800: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Hide spinner arrows for number input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background-color: #ffffff;
+            }
+            .card-shadow {
+                box-shadow: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-700 min-h-screen pb-12">
+
+    <!-- Navigation Header -->
+    <header class="bg-gradient-to-r from-slate-900 via-brand-800 to-brand-700 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
+                        <i class="fa-solid font-bold fa-calculator text-2xl text-blue-300"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-wide">คำนวณรายได้พนักงานรายเดือน</h1>
+                        <p class="text-xs text-blue-200 mt-0.5">Monthly Salary & OT Income Calculator</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetCalculator()" class="px-3.5 py-2 text-xs font-medium bg-white/10 hover:bg-white/20 transition text-white rounded-lg border border-white/20 flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>รีเซ็ตค่า</span>
+                    </button>
+                    <button onclick="window.print()" class="px-3.5 py-2 text-xs font-medium bg-blue-500 hover:bg-blue-600 transition text-white rounded-lg shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i>
+                        <span>พิมพ์สลิป/บันทึก PDF</span>
+                    </button>
+                </div>
+            </div>gi
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Input Form Section (Left Column) -->
+            <div class="lg:col-span-7 space-y-6 no-print">
+
+                <!-- 1. ข้อมูลพื้นฐานเงินเดือน -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition hover:shadow-md">
+                    <div class="flex items-center space-x-2 mb-4 pb-2 border-b border-slate-100">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-brand-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-800">1. ข้อมูลเงินเดือน & การทำงาน</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">เงินเดือน (บาท)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-medium">฿</span>
+                                <input type="number" id="baseSalary" value="25000" step="0.01" oninput="calculateAll()"
+                                    class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none font-semibold text-red-500 transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1.5">วันทำงานในเดือนนี้</label>
+                            <div class="flex gap-2">
+                                <select id="workingDaysSelect" onchange="handleWorkingDaysSelect()" class="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white focus:outline-none p-2 font-medium">                           
+                                    <option value="26">26 วัน</option>
+                                    <option value="30">30 วัน</option>
+                                    <option value="custom">กำหนดเอง</option>
+                                </select>
+                                <input type="number" id="workingDaysInput" value="26" min="1" max="31" oninput="calculateAll()" readonly
+                                    class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none text-center font-semibold text-slate-800 transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. กะการทำงาน & ค่ากะ -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition hover:shadow-md">
+                    <div class="flex items-center space-x-2 mb-4 pb-2 border-b border-slate-100">
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <h2 class="text-lg font-bold text-slate-800">2. กะการทำงาน & เบี้ยค่ากะ</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- กะเช้า -->
+                        <div class="p-3.5 bg-amber-50/50 rounded-xl border border-amber-100/80">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-amber-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-sun text-amber-500"></i> กะเช้า (Day Shift)
+                                </span>
+                                <span class="text-xs text-amber-700 font-medium">เงื่อนไข: ได้ค่ากะเมื่อทำ OT เท่านั้น</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">จำนวนวันกะเช้าที่ทำ OT (ได้ค่ากะ)</label>
+                                    <input type="number" id="dayShiftOTDays" value="0" min="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-red-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">อัตราค่ากะเช้า/วัน (บาท)</label>
+                                    <input type="number" id="dayShiftRate" value="35" min="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- กะดึก -->
+                        <div class="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100/80">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-indigo-900 flex items-center gap-2">
+                                    <i class="fa-solid fa-moon text-indigo-500"></i> กะดึก (Night Shift)
+                                </span>
+                                <span class="text-xs text-indigo-700 font-medium">ได้ค่ากะตามจำนวนวันที่ทำงานทั้งหมด</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">จำนวนวันทำงานกะดึกทั้งหมด (วัน)</label>
+                                    <input type="number" id="nightShiftDays" value="0" min="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-red-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">อัตราค่ากะดึก/วัน (บาท)</label>
+                                    <input type="number" id="nightShiftRate" value="55" min="0" oninput="calculateAll()"
+                                        class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. ชั่วโมงการทำงาน OT (ปรับปรุงใหม่) -->
+                <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition hover:shadow-md">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-2 border-b border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-business-time"></i>
+                            </div>
+                            <h2 class="text-lg font-bold text-slate-800">3. การทำงานล่วงเวลา (OT)</h2>
+                        </div>
+                        <!-- ปุ่มเลือกคำนวณเป็น ชั่วโมง หรือ วัน -->
+                        <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start sm:self-auto">
+                            <button id="modeHoursBtn" type="button" onclick="setOtMode('hours')"
+                                class="px-3 py-1 text-xs font-semibold rounded-lg transition bg-white text-emerald-600 shadow-sm">
+                                <i class="fa-regular fa-clock mr-1"></i> ระบุเป็นชั่วโมง
+                            </button>
+                            <button id="modeDaysBtn" type="button" onclick="setOtMode('days')"
+                                class="px-3 py-1 text-xs font-semibold rounded-lg transition text-slate-500 hover:text-slate-700">
+                                <i class="fa-regular fa-calendar-days mr-1"></i> ระบุเป็นวัน
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- แสดงเมื่อเลือกโหมดคำนวณเป็น "ชั่วโมง" -->
+                    <div id="otHoursContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- OT วันปกติ -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">OT วันปกติ (1.5 เท่า)</label>
+                            <p class="text-[11px] text-slate-500 mb-2">อัตรา: <span id="ot15RateText" class="font-semibold text-emerald-600">0.00</span> ฿/ชม.</p>
+                            <div class="relative">
+                                <input type="number" id="ot15Hours" value="0" min="0" step="0.5" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-red-500 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="text-xs text-slate-400 absolute right-2.5 top-2.5 font-normal">ชม.</span>
+                            </div>
+                        </div>
+
+                        <!-- OT วันหยุด 1x -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+                            <label class="block text-xs font-bold text-blue-600 mb-1">OT วันหยุด (1 เท่า)</label>
+                            <p class="text-[11px] text-slate-500 mb-2">อัตรา: <span id="ot10RateText" class="font-semibold text-emerald-600">0.00</span> ฿/ชม.</p>
+                            <div class="relative">
+                                <input type="number" id="ot10Hours" value="0" min="0" step="0.5" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-red-500 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="text-xs text-slate-400 absolute right-2.5 top-2.5 font-normal">ชม.</span>
+                            </div>
+                        </div>
+
+                        <!-- OT วันหยุด 3x -->
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+                            <label class="block text-xs font-bold text-blue-600 mb-1">OT วันหยุด (3 เท่า)</label>
+                            <p class="text-[11px] text-slate-500 mb-2">อัตรา: <span id="ot30RateText" class="font-semibold text-emerald-600">0.00</span> ฿/ชม.</p>
+                            <div class="relative">
+                                <input type="number" id="ot30Hours" value="0" min="0" step="0.5" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-red-500 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="text-xs text-slate-400 absolute right-2.5 top-2.5 font-normal">ชม.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- แสดงเมื่อเลือกโหมดคำนวณเป็น "วัน" -->
+                    <div id="otDaysContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+                        <!-- OT วันปกติ (วัน) -->
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
+                            <label class="block text-xs font-bold text-slate-700">OT วันปกติ 1.5 เท่า (ทำวันละ 3 ชม.)</label>
+                            <p class="text-[11px] text-slate-500">1 วัน = 3 ชั่วโมง</p>
+                            <div class="relative pt-1">
+                                <input type="number" id="otNormalDays" value="0" min="0" step="0.5" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-red-500 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="text-xs text-slate-400 absolute right-2.5 top-3.5 font-normal">วัน</span>
+                            </div>
+                        </div>
+
+                        <!-- OT วันหยุด (วัน) -->
+                        <div class="p-3.5 bg-blue-50/40 rounded-xl border border-blue-100 space-y-1">
+                            <label class="block text-xs font-bold text-blue-700">OT วันหยุด 12 ชม. (แยก 1x 9ชม. + 3x 3ชม.)</label>
+                            <p class="text-[11px] text-blue-500">1 วัน = (1x × 9 ชม.) + (3x × 3 ชม.)</p>
+                            <div class="relative pt-1">
+                                <input type="number" id="otHolidayDays" value="0" min="0" step="0.5" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-red-500 text-base focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <span class="text-xs text-slate-400 absolute right-2.5 top-3.5 font-normal">วัน</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. รายได้เพิ่มเติม & รายการหัก -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+                    <!-- รายได้เพิ่มเติม -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition hover:shadow-md">
+                        <div class="flex items-center space-x-2 mb-3 pb-2 border-b border-slate-100">
+                            <div class="w-7 h-7 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-xs">
+                                <i class="fa-solid fa-circle-plus"></i>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-800">4. รายได้อื่นๆ</h2>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">เบี้ยขยัน (บาท)</label>
+                                <input type="number" id="diligenceAllowance" value="800" min="0" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-red-500">
+                            </div>
+                            
+                            <!-- ค่าอาหาร -->
+                            <div class="p-3 bg-teal-50/40 rounded-xl border border-teal-100/80 space-y-2">
+                                <label class="block text-xs font-bold text-teal-900">ค่าอาหาร (Meal Allowance)</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">จำนวนวันทำงาน (วัน)</label>
+                                        <input type="number" id="mealDays" value="26" min="0" max="31" oninput="calculateAll()"
+                                            class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-red-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-500 mb-1">อัตราค่าอาหาร/วัน (บาท)</label>
+                                        <input type="number" id="mealRate" value="40" min="0" oninput="calculateAll()"
+                                            class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-center font-semibold text-slate-800">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">OIP-รายได้อื่นๆ (บาท)</label>
+                                <input type="number" id="otherIncome" value="0" min="0" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-red-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- รายการหัก -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm transition hover:shadow-md">
+                        <div class="flex items-center space-x-2 mb-3 pb-2 border-b border-slate-100">
+                            <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs">
+                                <i class="fa-solid fa-circle-minus"></i>
+                            </div>
+                            <h2 class="text-base font-bold text-slate-800">5. รายการหัก</h2>
+                        </div>
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-xs font-medium text-slate-600">ประกันสังคม (บาท)</label>
+                                    <label class="inline-flex items-center cursor-pointer text-[11px] text-brand-600">
+                                        <input type="checkbox" id="autoSocialSecurity" checked onchange="handleSSOAutoToggle()" class="sr-only peer">
+                                        <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-500 relative"></div>
+                                        <span class="ml-1.5 font-normal">คำนวณอัตโนมัติ (5%)</span>
+                                    </label>
+                                </div>
+                                <input type="number" id="socialSecurity" value="750" min="0" oninput="calculateAll()" readonly
+                                    class="w-full px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold text-red-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">ภาษีหัก ณ ที่จ่าย (บาท)</label>
+                                <input type="number" id="taxDeduction" value="0" min="0" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-red-500">
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-xs font-medium text-slate-600">กองทุนสำรองเลี้ยงชีพ (บาท)</label>
+                                    <label class="inline-flex items-center cursor-pointer text-[11px] text-brand-600">
+                                        <input type="checkbox" id="autoProvidentFund" checked onchange="handleProvidentAutoToggle()" class="sr-only peer">
+                                        <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-brand-500 relative"></div>
+                                        <span class="ml-1.5 font-normal">คำนวณอัตโนมัติ (10%)</span>
+                                    </label>
+                                </div>
+                                <input type="number" id="providentFund" value="2500" min="0" oninput="calculateAll()" readonly
+                                    class="w-full px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-sm font-semibold text-slate-800">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-600 mb-1">หักอื่นๆ (บาท)</label>
+                                <input type="number" id="otherDeductions" value="0" min="0" oninput="calculateAll()"
+                                    class="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-red-500">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Payslip / Summary Card (Right Column) -->
+            <div class="lg:col-span-5">
+                <div class="sticky top-6">
+                    <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden card-shadow">
+                        
+                        <!-- Payslip Header -->
+                        <div class="bg-slate-900 text-white p-6 relative">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="inline-block px-2.5 py-0.5 bg-blue-500/20 text-blue-300 text-[11px] font-semibold rounded-full mb-1 border border-blue-400/20">
+                                        ใบสรุปรายได้สุทธิประจำเดือน
+                                    </span>
+                                    <h3 class="text-xl font-bold tracking-tight">สรุปยอดรายรับ - รายหัก</h3>
+                                </div>
+                                <div class="text-right text-xs text-slate-400">
+                                    <p id="currentDateText"></p>
+                                </div>
+                            </div>
+
+                            <!-- Net Income Display -->
+                            <div class="mt-6 pt-4 border-t border-slate-800">
+                                <p class="text-xs text-slate-400 font-medium">รายได้สุทธิที่ได้รับจริง (Net Income)</p>
+                                <div class="flex items-baseline space-x-1 mt-1">
+                                    <span class="text-3xl sm:text-4xl font-extrabold text-emerald-400 tracking-tight" id="netIncomeDisplay">0.00</span>
+                                    <span class="text-sm font-medium text-slate-300">บาท</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hourly Rate Summary Box -->
+                        <div class="bg-blue-50/70 p-4 border-b border-blue-100/80 px-6">
+                            <p class="text-xs font-bold text-brand-800 mb-2 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-info text-brand-500"></i> อัตราค่าแรงและ OT ต่อชั่วโมง
+                            </p>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="bg-white p-2 rounded-lg border border-blue-100">
+                                    <span class="text-slate-500 block">ค่าแรงปกติ/ชม.:</span>
+                                    <span id="baseHourlyRateDisplay" class="font-bold text-slate-800">0.00</span> <span class="text-[10px] text-slate-400">บาท</span>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-blue-100">
+                                    <span class="text-slate-500 block">OT วันปกติ (1.5x):</span>
+                                    <span id="ot15RateDisplay" class="font-bold text-slate-800">0.00</span> <span class="text-[10px] text-slate-400">บาท</span>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-blue-100">
+                                    <span class="text-slate-500 block">OT วันหยุด (1x):</span>
+                                    <span id="ot10RateDisplay" class="font-bold text-slate-800">0.00</span> <span class="text-[10px] text-slate-400">บาท</span>
+                                </div>
+                                <div class="bg-white p-2 rounded-lg border border-blue-100">
+                                    <span class="text-slate-500 block">OT วันหยุด (3x):</span>
+                                    <span id="ot30RateDisplay" class="font-bold text-slate-800">0.00</span> <span class="text-[10px] text-slate-400">บาท</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detailed Breakdown -->
+                        <div class="p-6 space-y-4 max-h-[480px] overflow-y-auto">
+
+                            <!-- Section: Gross Earnings -->
+                        <div>
+                        <!-- ปรับตรงนี้เป็น text-sm เพื่อให้ข้อความ "รายการรายรับทั้งหมด" ใหญ่ขึ้นมาอีกนิด -->
+                            <div class="flex justify-between items-center text-sm font-bold text-slate-500 uppercase tracking-wider mb-2">
+                            <span>รายรับทั้งหมด (Earnings)</span>
+                        <!-- เพิ่ม text-lg เพื่อให้ตัวเลข +0.00 มีขนาดใหญ่เด่นชัด -->
+                            <span class="text-emerald-600 font-bold text-lg" id="totalEarningsDisplay">+0.00</span>
+                            </div>    
+							
+                                <div class="space-y-1.5 text-sm">
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>เงินเดือนพื้นฐาน</span>
+                                        <span id="sumBaseSalary" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ค่ากะเช้า <span id="sumDayShiftCount" class="text-xs text-slate-400"></span></span>
+                                        <span id="sumDayShiftPay" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ค่ากะดึก <span id="sumNightShiftCount" class="text-xs text-slate-400"></span></span>
+                                        <span id="sumNightShiftPay" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ค่าล่วงเวลา (OT รวม)</span>
+                                        <span id="sumTotalOTPay" class="font-semibold text-emerald-600">0.00</span>
+                                    </div>
+                                    
+                                    <!-- Nested OT Items -->
+                                    <div class="pl-3 border-l-2 border-slate-100 space-y-1 text-xs text-slate-500">
+                                        <div class="flex justify-between">
+                                            <span>- OT วันปกติ (1.5x) <span id="sumOt15Hours"></span></span>
+                                            <span id="sumOt15Pay">0.00</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>- OT วันหยุด (1x) <span id="sumOt10Hours"></span></span>
+                                            <span id="sumOt10Pay">0.00</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>- OT วันหยุด (3x) <span id="sumOt30Hours"></span></span>
+                                            <span id="sumOt30Pay">0.00</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>เบี้ยขยัน</span>
+                                        <span id="sumDiligence" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ค่าอาหาร <span id="sumMealDaysCount" class="text-xs text-slate-400"></span></span>
+                                        <span id="sumMeal" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>รายได้อื่นๆ</span>
+                                        <span id="sumOtherIncome" class="font-semibold text-slate-800">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Section: Deductions -->
+                            <div>
+                                <div class="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                    <span>รายการหักทั้งหมด (Deductions)</span>
+                                    <span class="text-rose-600 font-bold" id="totalDeductionsDisplay">-0.00</span>
+                                </div>
+                                <div class="space-y-1.5 text-sm">
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ประกันสังคม</span>
+                                        <span id="sumSocialSecurity" class="font-semibold text-rose-600">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>ภาษีหัก ณ ที่จ่าย</span>
+                                        <span id="sumTax" class="font-semibold text-rose-600">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>กองทุนสำรองเลี้ยงชีพ</span>
+                                        <span id="sumProvidentFund" class="font-semibold text-rose-600">0.00</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-600">
+                                        <span>รายการหักอื่นๆ</span>
+                                        <span id="sumOtherDeductions" class="font-semibold text-rose-600">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer Info / Action -->
+                        <div class="bg-slate-50 p-4 border-t border-slate-100 text-center no-print">
+                            <p class="text-[11px] text-slate-400">
+                                * หมายเหตุ: อัตราค่าแรง OT คำนวณจากสูตรพนักงานรายเดือน `(เงินเดือน x 12) / 2288`
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // OT Mode Variable ('hours' or 'days')
+        let otInputMode = 'hours';
+
+        // Set Current Date in Payslip
+        document.getElementById('currentDateText').innerText = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+
+        // Helper function for formatting numbers with commas & 2 decimals
+        function formatNum(num) {
+            return (Math.round((num + Number.EPSILON) * 100) / 100).toLocaleString('th-TH', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // Helper to parse input values safely
+        function getInputValue(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const val = parseFloat(el.value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        // Function to switch OT Mode
+        function setOtMode(mode) {
+            otInputMode = mode;
+            const hoursContainer = document.getElementById('otHoursContainer');
+            const daysContainer = document.getElementById('otDaysContainer');
+            const modeHoursBtn = document.getElementById('modeHoursBtn');
+            const modeDaysBtn = document.getElementById('modeDaysBtn');
+
+            if (mode === 'hours') {
+                hoursContainer.classList.remove('hidden');
+                daysContainer.classList.add('hidden');
+                
+                modeHoursBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg transition bg-white text-emerald-600 shadow-sm";
+                modeDaysBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg transition text-slate-500 hover:text-slate-700";
+            } else {
+                hoursContainer.classList.add('hidden');
+                daysContainer.classList.remove('hidden');
+                
+                modeDaysBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg transition bg-white text-emerald-600 shadow-sm";
+                modeHoursBtn.className = "px-3 py-1 text-xs font-semibold rounded-lg transition text-slate-500 hover:text-slate-700";
+            }
+            calculateAll();
+        }
+
+        // Handle working days select dropdown
+        function handleWorkingDaysSelect() {
+            const select = document.getElementById('workingDaysSelect');
+            const input = document.getElementById('workingDaysInput');
+            
+            if (select.value === 'custom') {
+                input.readOnly = false;
+                input.focus();
+                input.classList.remove('bg-slate-100');
+                input.classList.add('bg-white');
+            } else {
+                input.value = select.value;
+                input.readOnly = true;
+                input.classList.add('bg-slate-100');
+                input.classList.remove('bg-white');
+            }
+            calculateAll();
+        }
+
+        // Handle Social Security auto calculate checkbox
+        function handleSSOAutoToggle() {
+            const auto = document.getElementById('autoSocialSecurity').checked;
+            const ssoInput = document.getElementById('socialSecurity');
+            
+            if (auto) {
+                ssoInput.readOnly = true;
+                ssoInput.classList.add('bg-slate-100');
+                ssoInput.classList.remove('bg-white');
+            } else {
+                ssoInput.readOnly = false;
+                ssoInput.classList.remove('bg-slate-100');
+                ssoInput.classList.add('bg-white');
+            }
+            calculateAll();
+        }
+
+        // Handle Provident Fund auto calculate checkbox (10%)
+        function handleProvidentAutoToggle() {
+            const auto = document.getElementById('autoProvidentFund').checked;
+            const providentInput = document.getElementById('providentFund');
+            
+            if (auto) {
+                providentInput.readOnly = true;
+                providentInput.classList.add('bg-slate-100');
+                providentInput.classList.remove('bg-white');
+            } else {
+                providentInput.readOnly = false;
+                providentInput.classList.remove('bg-slate-100');
+                providentInput.classList.add('bg-white');
+            }
+            calculateAll();
+        }
+
+        // Main Calculation Engine
+        function calculateAll() {
+            // 1. Basic Inputs
+            const baseSalary = getInputValue('baseSalary');
+            const workingDays = getInputValue('workingDaysInput') || 30;
+
+            // Hourly rate based on monthly working days (standard calculation for display)
+            const baseHourlyRate = workingDays > 0 ? (baseSalary / workingDays / 8) : 0;
+
+            // 2. Exact OT Formula according to specification/image:
+            // Formula Base Hour Rate = (Salary * 12) / 2288
+            const otBaseHourRate = (baseSalary * 12) / 2288;
+
+            const ot10Rate = otBaseHourRate * 1.0; // Holiday 1x
+            const ot15Rate = otBaseHourRate * 1.5; // Normal Day 1.5x
+            const ot30Rate = otBaseHourRate * 3.0; // Holiday 3x
+
+            // Update Hourly Rates Text Elements
+            document.getElementById('ot10RateText').innerText = formatNum(ot10Rate);
+            document.getElementById('ot15RateText').innerText = formatNum(ot15Rate);
+            document.getElementById('ot30RateText').innerText = formatNum(ot30Rate);
+
+            document.getElementById('baseHourlyRateDisplay').innerText = formatNum(baseHourlyRate);
+            document.getElementById('ot10RateDisplay').innerText = formatNum(ot10Rate);
+            document.getElementById('ot15RateDisplay').innerText = formatNum(ot15Rate);
+            document.getElementById('ot30RateDisplay').innerText = formatNum(ot30Rate);
+
+            // 3. Shifts Calculation
+            const dayShiftOTDays = getInputValue('dayShiftOTDays');
+            const dayShiftRate = getInputValue('dayShiftRate');
+            const totalDayShiftPay = dayShiftOTDays * dayShiftRate;
+
+            const nightShiftDays = getInputValue('nightShiftDays');
+            const nightShiftRate = getInputValue('nightShiftRate');
+            const totalNightShiftPay = nightShiftDays * nightShiftRate;
+
+            // 4. OT Calculations (ปรับปรุงรองรับโหมด "วัน" และ "ชั่วโมง")
+            let ot15Hours = 0;
+            let ot10Hours = 0;
+            let ot30Hours = 0;
+
+            if (otInputMode === 'hours') {
+                ot15Hours = getInputValue('ot15Hours');
+                ot10Hours = getInputValue('ot10Hours');
+                ot30Hours = getInputValue('ot30Hours');
+            } else {
+                // คำนวณแบบระบุจำนวนวัน:
+                // 1 วัน OT วันปกติ = 3 ชม. (1.5x)
+                // 1 วัน OT วันหยุด = 9 ชม. (1x) + 3 ชม. (3x)
+                const otNormalDays = getInputValue('otNormalDays');
+                const otHolidayDays = getInputValue('otHolidayDays');
+
+                ot15Hours = otNormalDays * 3;
+                ot10Hours = otHolidayDays * 9;
+                ot30Hours = otHolidayDays * 3;
+            }
+
+            const ot15Pay = ot15Hours * ot15Rate;
+            const ot10Pay = ot10Hours * ot10Rate;
+            const ot30Pay = ot30Hours * ot30Rate;
+            const totalOTPay = ot15Pay + ot10Pay + ot30Pay;
+
+            // 5. Allowances
+            const diligenceAllowance = getInputValue('diligenceAllowance');
+            
+            // คำนวณค่าอาหาร: จำนวนวัน x อัตราค่าอาหารต่อวัน
+            const mealDays = getInputValue('mealDays');
+            const mealRate = getInputValue('mealRate');
+            const mealAllowance = mealDays * mealRate;
+            
+            const otherIncome = getInputValue('otherIncome');
+
+            // Total Gross Income
+            const totalEarnings = baseSalary + totalDayShiftPay + totalNightShiftPay + totalOTPay + diligenceAllowance + mealAllowance + otherIncome;
+
+            // 6. Deductions Calculation
+            let socialSecurity = 0;
+            const autoSSO = document.getElementById('autoSocialSecurity').checked;
+            if (autoSSO) {
+                // 5% of salary, capped at 750 (max base salary for sso is 15,000)
+                socialSecurity = Math.min(Math.round(baseSalary * 0.05), 750);
+                document.getElementById('socialSecurity').value = socialSecurity;
+            } else {
+                socialSecurity = getInputValue('socialSecurity');
+            }
+
+            // Provident Fund (10% of salary)
+            let providentFund = 0;
+            const autoProvident = document.getElementById('autoProvidentFund').checked;
+            if (autoProvident) {
+                providentFund = baseSalary * 0.10;
+                document.getElementById('providentFund').value = providentFund;
+            } else {
+                providentFund = getInputValue('providentFund');
+            }
+
+            const taxDeduction = getInputValue('taxDeduction');
+            const otherDeductions = getInputValue('otherDeductions');
+
+            const totalDeductions = socialSecurity + taxDeduction + providentFund + otherDeductions;
+
+            // 7. Net Income
+            const netIncome = totalEarnings - totalDeductions;
+
+            // -------------------------------------------------------------
+            // Render Results to UI
+            // -------------------------------------------------------------
+            document.getElementById('netIncomeDisplay').innerText = formatNum(netIncome);
+            document.getElementById('totalEarningsDisplay').innerText = '+' + formatNum(totalEarnings);
+            document.getElementById('totalDeductionsDisplay').innerText = '-' + formatNum(totalDeductions);
+
+            // Payslip Earnings Breakdown
+            document.getElementById('sumBaseSalary').innerText = formatNum(baseSalary);
+            
+            document.getElementById('sumDayShiftCount').innerText = `(${dayShiftOTDays} วันที่มี OT)`;
+            document.getElementById('sumDayShiftPay').innerText = formatNum(totalDayShiftPay);
+
+            document.getElementById('sumNightShiftCount').innerText = `(${nightShiftDays} วัน)`;
+            document.getElementById('sumNightShiftPay').innerText = formatNum(totalNightShiftPay);
+
+            document.getElementById('sumTotalOTPay').innerText = formatNum(totalOTPay);
+            
+            document.getElementById('sumOt15Hours').innerText = `(${ot15Hours} ชม.)`;
+            document.getElementById('sumOt15Pay').innerText = formatNum(ot15Pay);
+
+            document.getElementById('sumOt10Hours').innerText = `(${ot10Hours} ชม.)`;
+            document.getElementById('sumOt10Pay').innerText = formatNum(ot10Pay);
+
+            document.getElementById('sumOt30Hours').innerText = `(${ot30Hours} ชม.)`;
+            document.getElementById('sumOt30Pay').innerText = formatNum(ot30Pay);
+
+            document.getElementById('sumDiligence').innerText = formatNum(diligenceAllowance);
+            document.getElementById('sumMealDaysCount').innerText = `(${mealDays} วัน @ ${mealRate}฿)`;
+            document.getElementById('sumMeal').innerText = formatNum(mealAllowance);
+            document.getElementById('sumOtherIncome').innerText = formatNum(otherIncome);
+
+            // Payslip Deductions Breakdown
+            document.getElementById('sumSocialSecurity').innerText = formatNum(socialSecurity);
+            document.getElementById('sumTax').innerText = formatNum(taxDeduction);
+            document.getElementById('sumProvidentFund').innerText = formatNum(providentFund);
+            document.getElementById('sumOtherDeductions').innerText = formatNum(otherDeductions);
+        }
+
+        // Reset All Values to Defaults
+        function resetCalculator() {
+            document.getElementById('baseSalary').value = 25000;
+            document.getElementById('workingDaysSelect').value = '26';
+            
+            const workingDaysInput = document.getElementById('workingDaysInput');
+            workingDaysInput.value = 26;
+            workingDaysInput.readOnly = true;
+            workingDaysInput.classList.add('bg-slate-100');
+            workingDaysInput.classList.remove('bg-white');
+
+            document.getElementById('dayShiftOTDays').value = 0;
+            document.getElementById('dayShiftRate').value = 35;
+
+            document.getElementById('nightShiftDays').value = 0;
+            document.getElementById('nightShiftRate').value = 55;
+
+            // Reset OT values
+            document.getElementById('ot15Hours').value = 0;
+            document.getElementById('ot10Hours').value = 0;
+            document.getElementById('ot30Hours').value = 0;
+            document.getElementById('otNormalDays').value = 0;
+            document.getElementById('otHolidayDays').value = 0;
+            setOtMode('hours');
+
+            document.getElementById('diligenceAllowance').value = 800;
+            document.getElementById('mealDays').value = 26;
+            document.getElementById('mealRate').value = 40;
+            document.getElementById('otherIncome').value = 0;
+
+            const autoSSO = document.getElementById('autoSocialSecurity');
+            autoSSO.checked = true;
+            handleSSOAutoToggle();
+
+            const autoProvident = document.getElementById('autoProvidentFund');
+            autoProvident.checked = true;
+            handleProvidentAutoToggle();
+
+            document.getElementById('taxDeduction').value = 0;
+            document.getElementById('otherDeductions').value = 0;
+
+            calculateAll();
+        }
+
+        // Initialize calculation on page load
+        window.onload = function() {
+            calculateAll();
+        };
+    </script>
+</body>
+</html>
